@@ -1,0 +1,14 @@
+#!/bin/sh
+echo 4 > /proc/sys/kernel/printk
+mkdir /udisk
+mkdir /misc
+mkdir /dev/shm
+
+#mount -t vfat -o rw /dev/mmcblk0p2 /udisk
+#mount -t vfat -o rw /dev/mmcblk0p1 /misc
+echo "22"
+#mount -t vfat -o rw /dev/mmcblk2p2 /udisk
+#mount -t vfat -o rw /dev/mmcblk2p1 /misc
+mount -a
+
+yes | source /etc/init.d/init_upgrade &

@@ -1,0 +1,1 @@
+uenvcmd=setenv os_type android;
