@@ -1,5 +1,3 @@
-
-
 .PHONY: all clean kernel_clean uboot_clean bootloader_clean rootfs_clean distclean mrproper spec
 .PHONY: kernel kernel-config modules uboot bootloader rootfs upramfs misc firmware md5sum recovery
 
@@ -7,12 +5,10 @@ include .config
 
 TOP_DIR=$(shell pwd)
 CPUS=$$(($(shell cat /sys/devices/system/cpu/present | awk -F- '{ print $$2 }')+1))
-#CPUS=1
 Q=
 
 KERNEL_SRC=$(TOP_DIR)/../kernel
 UBOOT_SRC=$(TOP_DIR)/../u-boot
-
 
 SCRIPT_DIR=$(TOP_DIR)/scripts
 IC_SCRIPT_DIR=$(TOP_DIR)/$(IC_NAME)/scripts
@@ -78,7 +74,7 @@ uboot_upgrade:
 
 bootloader:
 	$(Q)mkdir -p $(BOOTLOAD_DIR)
-	
+
 	$(Q)cp $(TOP_DIR)/$(IC_NAME)/bootloader/*.bin $(BOOTLOAD_DIR)/ ; \
 	$(Q)cd $(IC_SCRIPT_DIR) && ./bootloader_pack $(BOARD_CONFIG_DIR)/bootloader.ini $(BOOTLOAD_DIR)/bootloader.bin
 
@@ -100,7 +96,7 @@ upramfs:
 	$(Q)cp -rf $(TOP_DIR)/$(IC_NAME)/burn/initramfs/* $(UPRAMFS_ROOTFS)
 	$(Q)cp -rf $(TOP_DIR)/$(IC_NAME)/prebuilt/initramfs/* $(UPRAMFS_ROOTFS)
 	$(Q)$(CROSS_COMPILE)strip --strip-unneeded $(UPRAMFS_ROOTFS)/lib/modules/*.ko
-	
+
 	$(Q)$(SCRIPT_DIR)/gen_initramfs_list.sh -u 0 -g 0 $(UPRAMFS_ROOTFS) > $(BURN_DIR)/upramfs.list
 	$(Q)${SCRIPT_DIR}/gen_init_cpio $(BURN_DIR)/upramfs.list > ${BURN_DIR}/upramfs.img.tmp
 	$(Q)$(TOOLS_DIR)/utils/mkimage -n "RAMFS" -A $(ARCH) -O linux -T ramdisk -C none -a 02000000 -e 02000000 -d ${BURN_DIR}/upramfs.img.tmp ${BURN_DIR}/upramfs.img
@@ -113,26 +109,25 @@ firmware: bootloader upramfs misc recovery
 	$(Q)cp $(KERNEL_OUT_DIR)/arch/$(ARCH)/boot/dts/$(KERNEL_UPGRADE_DTS).dtb $(BURN_DIR)/kernel-upgrade.dtb
 	$(Q)cp $(UBOOT_OUT_DIR)/uboot.bin $(BURN_DIR)/
 	$(Q)cp $(UBOOT_OUT_DIR)/uboot.bin $(IMAGE_DIR)/
-	
+
 	$(Q)cp $(BOOTLOAD_DIR)/*.bin $(BURN_DIR)/
 	$(Q)cp $(BOARD_CONFIG_DIR)/bootloader.ini $(BURN_DIR)/
 	$(Q)cp $(BOOTLOAD_DIR)/bootloader.bin $(IMAGE_DIR)/
 	$(Q)cp $(TOP_DIR)/$(IC_NAME)/burn/adfudec/*.bin $(BURN_DIR)/
-	
+
 	$(Q)cp $(BOARD_CONFIG_DIR)/partition.cfg $(IC_SCRIPT_DIR)/partition.cfg
 	$(Q)python $(SCRIPT_DIR)/partition_create.py $(IC_SCRIPT_DIR)/partition.cfg  $(IC_SCRIPT_DIR)/partition_tmp.cfg
 	$(Q)sed -i 's/\\boardname\\/\\$(IC_NAME)_$(OS_NAME)_$(BOARD_NAME)\\/' $(IC_SCRIPT_DIR)/partition_tmp.cfg
-	
+
 	$(Q)cp $(IC_SCRIPT_DIR)/fwimage_linux.cfg  $(IC_SCRIPT_DIR)/fwimage_linux_tmp.cfg
 	$(Q)sed -i 's/boardname/$(IC_NAME)_$(OS_NAME)_$(BOARD_NAME)/' $(IC_SCRIPT_DIR)/fwimage_linux_tmp.cfg
-	
+
 	$(Q)echo "--Build Firmwares.."
 	$(Q)cd $(SCRIPT_DIR) && ./linux_build_fw $(IC_SCRIPT_DIR)/fwimage_linux_tmp.cfg $(IMAGE_DIR) $(FW_NAME)
-	$(Q)rm $(IC_SCRIPT_DIR)/partition_tmp.cfg $(IC_SCRIPT_DIR)/partition.cfg $(IC_SCRIPT_DIR)/fwimage_linux_tmp.cfg 
+	$(Q)rm $(IC_SCRIPT_DIR)/partition_tmp.cfg $(IC_SCRIPT_DIR)/partition.cfg $(IC_SCRIPT_DIR)/fwimage_linux_tmp.cfg
 
 md5sum:
 	@cd $(IMAGE_DIR) && md5sum *.* > image.md5
-
 
 clean: kernel_clean uboot_clean bootloader_clean
 	#$(Q)rm -rf $(TOP_DIR)/out
@@ -161,5 +156,3 @@ mrproper:
 include $(OS_CONFIG_DIR)/os.mk
 include $(TOP_DIR)/$(IC_NAME)/card_boot_or_burn/card.mk
 include $(TOP_DIR)/$(IC_NAME)/pcba_linux/pcba_linux.mk
-
-

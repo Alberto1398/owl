@@ -9,7 +9,7 @@
 
 
 unset MENU_CHOICES_ARRAY
-add_item(){
+add_item() {
 	local new_item=$1
 	local c
 	for c in ${MENU_CHOICES_ARRAY[@]} ; do
@@ -26,12 +26,12 @@ build_ic_list() {
 	then
 		add_item "s500"
 	fi
-	
+
 	if [ -d "s700" ]
 	then
 		add_item "s700"
 	fi
-	
+
 	if [ -d "v700" ]
 	then
 		add_item "v700"
@@ -81,7 +81,7 @@ build_list() {
 	done
 }
 
-print_menu(){
+print_menu() {
 	local i=1
 	local choice
 	for choice in ${MENU_CHOICES_ARRAY[@]}
@@ -93,133 +93,128 @@ print_menu(){
 	echo
 }
 
+read_choice() {
+	# Select ic type
+	local answer
+	build_ic_list
 
-read_choice(){
-		####################################### select ic type
-    local answer
-    build_ic_list
-    
-    if [ ${#MENU_CHOICES_ARRAY[@]} -eq 0 ]
-    then
-        echo "error: no ic."
-        return
-    elif [ ${#MENU_CHOICES_ARRAY[@]} -eq 1 ]
-    then
-        selected_ic=${MENU_CHOICES_ARRAY[0]}
-    else
-        echo "Select IC name:"
-        print_menu
-        echo -n "Which would you like? [${MENU_CHOICES_ARRAY[0]}] "
-        read answer
-	
-        local selected_ic=
+	if [ ${#MENU_CHOICES_ARRAY[@]} -eq 0 ]
+	then
+		echo "error: no ic."
+		return
+	elif [ ${#MENU_CHOICES_ARRAY[@]} -eq 1 ]
+	then
+		selected_ic=${MENU_CHOICES_ARRAY[0]}
+	else
+		echo "Select IC name:"
+		print_menu
+		echo -n "Which would you like? [${MENU_CHOICES_ARRAY[0]}] "
+		read answer
 
-        if [ -z "$answer" ]
-        then
-            selected_ic=${MENU_CHOICES_ARRAY[0]}
-        elif (echo -n $answer | grep -q -e "^[0-9][0-9]*$")
-        then
-            if [ $answer -le ${#MENU_CHOICES_ARRAY[@]} ]
-            then
-                selected_ic=${MENU_CHOICES_ARRAY[$(($answer-1))]}
-            fi
-        elif (echo -n $answer | grep -q -e "^[^\-][^\-][^\-][^\-]*$")
-        then
-            selected_ic=$answer
-        fi
+		local selected_ic=
 
-        if [ -z "$selected_ic" ]
-        then
-            echo
-            echo "Invalid lunch : $answer"
-            return 1
-        fi
-    
-        echo
-    fi
+		if [ -z "$answer" ]
+		then
+			selected_ic=${MENU_CHOICES_ARRAY[0]}
+		elif (echo -n $answer | grep -q -e "^[0-9][0-9]*$")
+		then
+			if [ $answer -le ${#MENU_CHOICES_ARRAY[@]} ]
+			then
+				selected_ic=${MENU_CHOICES_ARRAY[$(($answer-1))]}
+			fi
+		elif (echo -n $answer | grep -q -e "^[^\-][^\-][^\-][^\-]*$")
+		then
+			selected_ic=$answer
+		fi
 
-    
-		###################################### select os type
-    build_os_list $selected_ic/boards
-    
-    if [ ${#MENU_CHOICES_ARRAY[@]} -eq 0 ]
-    then
-        echo "error: no os."
-        return
-    elif [ ${#MENU_CHOICES_ARRAY[@]} -eq 1 ]
-    then
-        selected_os=${MENU_CHOICES_ARRAY[0]}
-    else
-        echo "Select build os:"
-        print_menu
-        echo -n "Which would you like? [${MENU_CHOICES_ARRAY[0]}] "
-        read answer
-	
-        local selected_os=
+		if [ -z "$selected_ic" ]
+		then
+			echo
+			echo "Invalid lunch : $answer"
+			return 1
+		fi
 
-        if [ -z "$answer" ]
-        then
-            selected_os=${MENU_CHOICES_ARRAY[0]}
-        elif (echo -n $answer | grep -q -e "^[0-9][0-9]*$")
-        then
-            if [ $answer -le ${#MENU_CHOICES_ARRAY[@]} ]
-            then
-                selected_os=${MENU_CHOICES_ARRAY[$(($answer-1))]}
-            fi
-        elif (echo -n $answer | grep -q -e "^[^\-][^\-][^\-][^\-]*$")
-        then
-            selected_os=$answer
-        fi
+		echo
+	fi
 
-        if [ -z "$selected_os" ]
-        then
-            echo
-            echo "Invalid lunch: $answer"
-            return 1
-        fi
-    
-        echo 
-    fi
-    
-    ############################select board type
-    build_list $selected_ic/boards/$selected_os/
-    echo "Select board type:"
-    print_menu
-    echo -n "Which would you like? [${MENU_CHOICES_ARRAY[0]}] "
-    read answer
-	
-    local selected_board=
+	# Select os type
+	build_os_list $selected_ic/boards
 
-    if [ -z "$answer" ]
-    then
-        selected_board=${MENU_CHOICES_ARRAY[0]}
-    elif (echo -n $answer | grep -q -e "^[0-9][0-9]*$")
-    then
-        if [ $answer -le ${#MENU_CHOICES_ARRAY[@]} ]
-        then
-            selected_board=${MENU_CHOICES_ARRAY[$(($answer-1))]}
-        fi
-    elif (echo -n $answer | grep -q -e "^[^\-][^\-][^\-][^\-]*$")
-    then
-        selected_board=$answer
-    fi
+	if [ ${#MENU_CHOICES_ARRAY[@]} -eq 0 ]
+	then
+		echo "error: no os."
+		return
+	elif [ ${#MENU_CHOICES_ARRAY[@]} -eq 1 ]
+	then
+		selected_os=${MENU_CHOICES_ARRAY[0]}
+	else
+		echo "Select build os:"
+		print_menu
+		echo -n "Which would you like? [${MENU_CHOICES_ARRAY[0]}] "
+		read answer
 
-    if [ -z "$selected_board" ]
-    then
-        echo
-        echo "Invalid lunch: $answer"
-        return 1
-    fi
-    
-    ##############################################################
-    cat $selected_ic/boards/$selected_os/$selected_board/config > .config
-    echo IC_NAME=$selected_ic >> .config
-		echo OS_NAME=$selected_os >> .config
-		echo BOARD_NAME=$selected_board >> .config
-		rm -f out/$selected_ic"_"$selected_os"_"$selected_board/kernel/.config
-		echo "$selected_ic $selected_os $selected_board configured."
+		local selected_os=
+
+		if [ -z "$answer" ]
+		then
+			selected_os=${MENU_CHOICES_ARRAY[0]}
+		elif (echo -n $answer | grep -q -e "^[0-9][0-9]*$")
+		then
+			if [ $answer -le ${#MENU_CHOICES_ARRAY[@]} ]
+			then
+				selected_os=${MENU_CHOICES_ARRAY[$(($answer-1))]}
+			fi
+		elif (echo -n $answer | grep -q -e "^[^\-][^\-][^\-][^\-]*$")
+		then
+			selected_os=$answer
+		fi
+
+		if [ -z "$selected_os" ]
+		then
+			echo
+			echo "Invalid lunch: $answer"
+			return 1
+		fi
+		echo
+	fi
+
+	# Select board type
+	build_list $selected_ic/boards/$selected_os/
+	echo "Select board type:"
+	print_menu
+	echo -n "Which would you like? [${MENU_CHOICES_ARRAY[0]}] "
+	read answer
+
+	local selected_board=
+
+	if [ -z "$answer" ]
+	then
+		selected_board=${MENU_CHOICES_ARRAY[0]}
+	elif (echo -n $answer | grep -q -e "^[0-9][0-9]*$")
+	then
+		if [ $answer -le ${#MENU_CHOICES_ARRAY[@]} ]
+		then
+			selected_board=${MENU_CHOICES_ARRAY[$(($answer-1))]}
+		fi
+	elif (echo -n $answer | grep -q -e "^[^\-][^\-][^\-][^\-]*$")
+	then
+		selected_board=$answer
+	fi
+
+	if [ -z "$selected_board" ]
+	then
+		echo
+		echo "Invalid lunch: $answer"
+		return 1
+	fi
+
+	cat $selected_ic/boards/$selected_os/$selected_board/config > .config
+	echo IC_NAME=$selected_ic >> .config
+	echo OS_NAME=$selected_os >> .config
+	echo BOARD_NAME=$selected_board >> .config
+	rm -f out/$selected_ic"_"$selected_os"_"$selected_board/kernel/.config
+	echo "$selected_ic $selected_os $selected_board configured."
 }
-
 
 if [ $# -eq 3 ] && [ -d "$1" ] && [ -d "$1/boards/$2" ] && [ -d "$1/boards/$2/$3" ];then
 	cat $1/boards/$2/$3/config > .config
@@ -232,5 +227,3 @@ if [ $# -eq 3 ] && [ -d "$1" ] && [ -d "$1/boards/$2" ] && [ -d "$1/boards/$2/$3
 else
 	read_choice
 fi
-
-
